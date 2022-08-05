@@ -122,6 +122,7 @@ export default {
 <style>
 body {
     background-color: darkgray;
+    background-size: contain, cover;
 }
 #home {
     display: grid;
