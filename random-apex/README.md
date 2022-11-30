@@ -1,8 +1,8 @@
 # random-apex
 Random project, made for me and my friends.
-```
+
 https://randomlegend.000webhostapp.com/
-```
+
 
 ## Project setup
 ```
