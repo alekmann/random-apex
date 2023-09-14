@@ -1,5 +1,5 @@
 # random-apex
-Project, made for me and my friends.
+Project made for me and my friends.
 
 https://randomlegend.000webhostapp.com/
 
