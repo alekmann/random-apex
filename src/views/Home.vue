@@ -2,7 +2,7 @@
   <div id="home">
     <h1 id="header">Random legend</h1>
     <div class="components-grid">
-      <div class="flex-wrap">
+      <div v-if="numPlayers >= 1" class="flex-wrap">
         <div class="legend-box-div">
           <legend-box
             :imageName="image1"
@@ -15,7 +15,7 @@
           <h2>{{ imageText1 }}</h2>
         </div>
       </div>
-      <div class="flex-wrap">
+      <div v-if="numPlayers >= 2" class="flex-wrap">
         <div class="legend-box-div">
           <legend-box
             :imageName="image2"
@@ -28,7 +28,7 @@
           <h2>{{ imageText2 }}</h2>
         </div>
       </div>
-      <div class="flex-wrap">
+      <div v-if="numPlayers >= 3" class="flex-wrap">
         <div class="legend-box-div">
           <legend-box
             :imageName="image3"
@@ -41,6 +41,19 @@
           <h2>{{ imageText3 }}</h2>
         </div>
       </div>
+      <div v-if="numPlayers >= 4" class="flex-wrap">
+        <div class="legend-box-div">
+          <legend-box
+            :imageName="image4"
+            :class="{ 'shot-selected': isShotSelected(image4) }"
+            :key="imageKey4"
+            :revealed="!isShotSelected(image4)"
+          />
+        </div>
+        <div>
+          <h2>{{ imageText4 }}</h2>
+        </div>
+      </div>
     </div>
     <div class="button-shots-flex">
       <button id="random-button" @click="randomLegend">Random</button>
@@ -51,6 +64,17 @@
           id="number-of-shots"
           name="number-of-shots"
           v-model="shots"
+        />
+      </div>
+      <div class="block">
+        <label for="number-of-players">Number of Players</label>
+        <input
+          type="number"
+          id="number-of-players"
+          name="number-of-players"
+          v-model="numPlayers"
+          min="3"
+          max="4"
         />
       </div>
     </div>
@@ -70,16 +94,20 @@ export default {
   data() {
     return {
       shots: 0,
+      numPlayers: 3,
       image1: "apex-icon.jpeg",
       imageText1: "",
       image2: "apex-icon.jpeg",
       imageText2: "",
       image3: "apex-icon.jpeg",
       imageText3: "",
+      image4: "apex-icon.jpeg",
+      imageText4: "",
       legendListArray: legends,
       imageKey1: 0,
       imageKey2: 0,
       imageKey3: 0,
+      imageKey4: 0,
     };
   },
 
@@ -124,7 +152,10 @@ export default {
       // Shuffle the extended list to randomize the order
       this.shuffle(extendedList);
 
-      const getImageAndText = (alreadySelectedFriends) => {
+      const getImageAndText = (
+        alreadySelectedFriends,
+        alreadySelectedLegends
+      ) => {
         let image, isShot;
         let attempts = 0; // Keep track of attempts to avoid endless loop
         do {
@@ -143,8 +174,11 @@ export default {
           image = extendedList[randomIndex];
           isShot = friends.includes(image);
 
-          // If the image is a friend that's already been selected, continue to find an unselected friend
-          if (isShot && alreadySelectedFriends.includes(image)) {
+          // If the image is a friend that's already been selected or a legend already selected, continue to find an unselected one
+          if (
+            (isShot && alreadySelectedFriends.includes(image)) ||
+            alreadySelectedLegends.includes(image)
+          ) {
             image = null; // Reset image to null to continue the loop
             attempts++; // Increment attempt counter
           }
@@ -153,20 +187,46 @@ export default {
         // If a friend is selected, add to the alreadySelectedFriends list
         if (isShot) {
           alreadySelectedFriends.push(image);
+        } else {
+          alreadySelectedLegends.push(image);
         }
 
         const imageText = isShot ? "Shoooooot!!!" : image.replace(".jpeg", "");
-        return { image, imageText, alreadySelectedFriends };
+        return {
+          image,
+          imageText,
+          alreadySelectedFriends,
+          alreadySelectedLegends,
+        };
       };
 
       let alreadySelectedFriends = [];
-      let result1 = getImageAndText(alreadySelectedFriends);
+      let alreadySelectedLegends = [];
+      let result1 = getImageAndText(
+        alreadySelectedFriends,
+        alreadySelectedLegends
+      );
       alreadySelectedFriends = result1.alreadySelectedFriends;
+      alreadySelectedLegends = result1.alreadySelectedLegends;
 
-      let result2 = getImageAndText(alreadySelectedFriends);
+      let result2 = getImageAndText(
+        alreadySelectedFriends,
+        alreadySelectedLegends
+      );
       alreadySelectedFriends = result2.alreadySelectedFriends;
+      alreadySelectedLegends = result2.alreadySelectedLegends;
 
-      let result3 = getImageAndText(alreadySelectedFriends);
+      let result3 = getImageAndText(
+        alreadySelectedFriends,
+        alreadySelectedLegends
+      );
+      alreadySelectedFriends = result3.alreadySelectedFriends;
+      alreadySelectedLegends = result3.alreadySelectedLegends;
+
+      let result4 =
+        this.numPlayers === 4
+          ? getImageAndText(alreadySelectedFriends, alreadySelectedLegends)
+          : {};
 
       // Assign images and texts for each legend box
       this.image1 = result1.image;
@@ -175,11 +235,18 @@ export default {
       this.imageText2 = result2.imageText;
       this.image3 = result3.image;
       this.imageText3 = result3.imageText;
+      if (this.numPlayers === 4) {
+        this.image4 = result4.image;
+        this.imageText4 = result4.imageText;
+      }
 
       // Update keys to trigger re-render
       this.imageKey1 = Math.random();
       this.imageKey2 = Math.random();
       this.imageKey3 = Math.random();
+      if (this.numPlayers === 4) {
+        this.imageKey4 = Math.random();
+      }
     },
 
     isShotSelected(imageName) {
@@ -191,44 +258,6 @@ export default {
       ];
       return shotImages.includes(imageName);
     },
-
-    // simulateRandomSelection(numSimulations, numShots) {
-    //   const friends = ["Benji.jpeg", "Snollo.jpeg", "Sonny.jpeg", "Aleks.jpeg"];
-    //   // Initialize count object to keep track of how many times each friend is chosen
-    //   let count = friends.reduce(
-    //     (acc, friend) => ({ ...acc, [friend]: 0 }),
-    //     {}
-    //   );
-
-    //   for (let i = 0; i < numSimulations; i++) {
-    //     // Reset the shots for each simulation
-    //     this.shots = numShots;
-
-    //     // Initialize an array to keep track of the friends selected in each simulation
-    //     let selectedFriends = [];
-
-    //     // Call randomLegend method and record the selected friends
-    //     this.randomLegend();
-    //     [this.image1, this.image2, this.image3].forEach((imageName) => {
-    //       if (
-    //         friends.includes(imageName) &&
-    //         !selectedFriends.includes(imageName)
-    //       ) {
-    //         count[imageName]++;
-    //         selectedFriends.push(imageName);
-    //       }
-    //     });
-    //   }
-
-    //   console.log(
-    //     "Results after",
-    //     numSimulations,
-    //     "simulations with",
-    //     numShots,
-    //     "shots each:"
-    //   );
-    //   console.log(count);
-    // },
 
     preloadImages() {
       const friends = ["Benji.jpeg", "Snollo.jpeg", "Sonny.jpeg", "Aleks.jpeg"];
@@ -244,9 +273,6 @@ export default {
       });
     },
   },
-  // created() {
-  //   window.simulateRandomSelection = this.simulateRandomSelection;
-  // },
 };
 </script>
 
@@ -305,6 +331,7 @@ h2 {
 .block label {
   display: block;
   text-align: left;
+  margin: 2px;
 }
 input {
   width: 69px;
