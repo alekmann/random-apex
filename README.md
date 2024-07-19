@@ -1,7 +1,7 @@
 # random-apex
 Project made for me and my friends.
 
-https://randomlegend.000webhostapp.com/
+https://random-apex-two.vercel.app/
 
 
 ## Project setup
