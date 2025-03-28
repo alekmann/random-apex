@@ -133,118 +133,65 @@ export default {
     },
 
     randomLegend() {
-      // Reset legendListArray to its initial state
-      this.legendListArray = [...legends];
-
       const friends = ["Benji.jpeg", "Snollo.jpeg", "Sonny.jpeg", "Aleks.jpeg"];
+      const legendsPool = [...this.legendListArray];
+      const totalLegends = legendsPool.length;
+      const totalPlayers = this.numPlayers;
 
-      // Initialize an array for the extended list with all legends
-      let extendedList = [...this.legendListArray];
+      let usedFriends = [];
+      let usedLegends = [];
 
-      // Add friends to the extended list based on the shots value, ensuring equal distribution
-      let availableFriends = [...friends]; // Copy of friends to track available options
-      for (let i = 0; i < this.shots; i++) {
-        // Cycle through friends to maintain equal distribution
-        const friendToAdd = availableFriends[i % availableFriends.length];
-        extendedList.push(friendToAdd);
-      }
+      let images = [];
+      let texts = [];
 
-      // Shuffle the extended list to randomize the order
-      this.shuffle(extendedList);
+      for (let i = 0; i < totalPlayers; i++) {
+        const shotChance = this.shots / totalLegends;
+        const isShot = Math.random() < shotChance;
 
-      const getImageAndText = (
-        alreadySelectedFriends,
-        alreadySelectedLegends
-      ) => {
-        let image, isShot;
-        let attempts = 0; // Keep track of attempts to avoid endless loop
-        do {
-          if (attempts > extendedList.length * 2) {
-            // Arbitrary limit to prevent endless loops
-            // If too many attempts, force selection from legends only
-            image =
-              this.legendListArray[
-                Math.floor(Math.random() * this.legendListArray.length)
-              ];
-            isShot = false; // Ensure it's not considered a shot
-            break; // Exit the loop
-          }
-
-          const randomIndex = Math.floor(Math.random() * extendedList.length);
-          image = extendedList[randomIndex];
-          isShot = friends.includes(image);
-
-          // If the image is a friend that's already been selected or a legend already selected, continue to find an unselected one
-          if (
-            (isShot && alreadySelectedFriends.includes(image)) ||
-            alreadySelectedLegends.includes(image)
-          ) {
-            image = null; // Reset image to null to continue the loop
-            attempts++; // Increment attempt counter
-          }
-        } while (!image); // Continue looping until a valid image is found
-
-        // If a friend is selected, add to the alreadySelectedFriends list
-        if (isShot) {
-          alreadySelectedFriends.push(image);
+        if (isShot && usedFriends.length < friends.length) {
+          const availableFriends = friends.filter(
+            (f) => !usedFriends.includes(f)
+          );
+          const selectedFriend =
+            availableFriends[
+              Math.floor(Math.random() * availableFriends.length)
+            ];
+          images.push(selectedFriend);
+          texts.push("Shoooooot!!!");
+          usedFriends.push(selectedFriend);
         } else {
-          alreadySelectedLegends.push(image);
+          // Pick a random legend not already used
+          const availableLegends = legendsPool.filter(
+            (l) => !usedLegends.includes(l)
+          );
+          const selectedLegend =
+            availableLegends[
+              Math.floor(Math.random() * availableLegends.length)
+            ];
+          images.push(selectedLegend);
+          texts.push(selectedLegend.replace(".jpeg", ""));
+          usedLegends.push(selectedLegend);
         }
-
-        const imageText = isShot ? "Shoooooot!!!" : image.replace(".jpeg", "");
-        return {
-          image,
-          imageText,
-          alreadySelectedFriends,
-          alreadySelectedLegends,
-        };
-      };
-
-      let alreadySelectedFriends = [];
-      let alreadySelectedLegends = [];
-      let result1 = getImageAndText(
-        alreadySelectedFriends,
-        alreadySelectedLegends
-      );
-      alreadySelectedFriends = result1.alreadySelectedFriends;
-      alreadySelectedLegends = result1.alreadySelectedLegends;
-
-      let result2 = getImageAndText(
-        alreadySelectedFriends,
-        alreadySelectedLegends
-      );
-      alreadySelectedFriends = result2.alreadySelectedFriends;
-      alreadySelectedLegends = result2.alreadySelectedLegends;
-
-      let result3 = getImageAndText(
-        alreadySelectedFriends,
-        alreadySelectedLegends
-      );
-      alreadySelectedFriends = result3.alreadySelectedFriends;
-      alreadySelectedLegends = result3.alreadySelectedLegends;
-
-      let result4 =
-        this.numPlayers === 4
-          ? getImageAndText(alreadySelectedFriends, alreadySelectedLegends)
-          : {};
-
-      // Assign images and texts for each legend box
-      this.image1 = result1.image;
-      this.imageText1 = result1.imageText;
-      this.image2 = result2.image;
-      this.imageText2 = result2.imageText;
-      this.image3 = result3.image;
-      this.imageText3 = result3.imageText;
-      if (this.numPlayers === 4) {
-        this.image4 = result4.image;
-        this.imageText4 = result4.imageText;
       }
 
-      // Update keys to trigger re-render
+      // Assign images/texts to component data
+      this.image1 = images[0];
+      this.imageText1 = texts[0];
+      this.image2 = images[1];
+      this.imageText2 = texts[1];
+      this.image3 = images[2];
+      this.imageText3 = texts[2];
+
+      if (totalPlayers === 4) {
+        this.image4 = images[3];
+        this.imageText4 = texts[3];
+      }
+
+      // Force re-renders
       this.imageKey1 = Math.random();
       this.imageKey2 = Math.random();
       this.imageKey3 = Math.random();
-      if (this.numPlayers === 4) {
+      if (totalPlayers === 4) {
         this.imageKey4 = Math.random();
       }
     },
